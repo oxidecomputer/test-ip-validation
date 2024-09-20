@@ -1,6 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use std::net::{Ipv4Addr, Ipv6Addr};
+    use oxnet::Ipv4Net;
+    use std::{
+        net::{Ipv4Addr, Ipv6Addr},
+        str::FromStr,
+    };
 
     #[test]
     fn test_ipv4_pass() {
@@ -71,6 +75,47 @@ mod tests {
         ] {
             let result = ip.parse::<Ipv6Addr>().is_err();
             assert!(result, "Expected error for IP: {}", ip);
+        }
+    }
+
+    #[test]
+    fn test_ipv4_net_pass() {
+        let valid_networks = [
+            "192.168.0.0/24",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "0.0.0.0/0",
+            "192.168.1.0/25",
+            "203.0.113.0/24",
+        ];
+
+        for network in valid_networks.iter() {
+            let parsed = Ipv4Net::from_str(network);
+            assert!(parsed.is_ok(), "Failed to parse valid network: {}", network);
+        }
+    }
+
+    #[test]
+    fn test_ipv4_net_fail() {
+        let invalid_networks = [
+            "192.168.0./24",
+            "",
+            "1.1.1.1",
+            "1.1.1.1/180",
+            "256.0.0.0/24",
+            "192.168.0.0/33",
+            "192.168.0.0/-1",
+            "192.168.0.0.0/24",
+            "192.168.0/24",
+        ];
+
+        for network in invalid_networks.iter() {
+            let parsed = Ipv4Net::from_str(network);
+            assert!(
+                parsed.is_err(),
+                "Incorrectly parsed invalid network: {}",
+                network
+            );
         }
     }
 }
